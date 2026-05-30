@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almanaque de la Revolución Mexicana</title>
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f4f1ea;
+            color: #333;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #5c2c16;
+            color: #f7e7ce;
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 5px solid #d4a373;
+        }
+        header h1 { font-size: 2.5rem; margin-bottom: 10px; text-transform: uppercase; }
+        header p { font-size: 1.1rem; font-style: italic; }
+
+        /* --- CONTROLES Y BUSCADOR --- */
+        .contenedor-controles { max-width: 1200px; margin: 30px auto; padding: 0 20px; text-align: center; }
+        .caja-busqueda {
+            width: 100%; max-width: 500px; padding: 12px 20px; font-size: 1rem;
+            border: 2px solid #ccc; border-radius: 25px; margin-bottom: 20px; outline: none;
+        }
+        .caja-busqueda:focus { border-color: #a26944; }
+        .botones-filtro { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .btn {
+            background-color: #fff; color: #5c2c16; border: 2px solid #5c2c16;
+            padding: 8px 16px; font-size: 0.9rem; font-weight: bold; border-radius: 20px;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .btn.activo, .btn:hover { background-color: #5c2c16; color: #fff; }
+
+        /* --- REJILLA PRINCIPAL --- */
+        .contenedor-almanaque {
+            max-width: 1200px; margin: 0 auto 50px auto; padding: 0 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px;
+        }
+
+        /* --- TARJETAS --- */
+        .tarjeta-personaje {
+            background-color: #fff; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden;
+            display: flex; flex-direction: column; border: 1px solid #e0d5c1;
+            cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .tarjeta-personaje:hover {
+            transform: translateY(-5px); box-shadow: 0 8px 25px rgba(162, 105, 68, 0.3);
+            border-color: #a26944;
+        }
+        .contenedor-imagen {
+            width: 100%; height: 550px; background-color: #e0d5c1;
+            border-bottom: 4px solid #a26944; overflow: hidden;
+        }
+        .imagen-personaje { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+        .info-basica { padding: 15px 20px; background-color: #faf6f0; border-bottom: 1px solid #eee; }
+        .info-basica h2 { font-size: 1.3rem; color: #5c2c16; margin-bottom: 5px; }
+        .meta-datos { font-size: 0.85rem; color: #777; display: flex; justify-content: space-between; font-weight: bold; align-items: center; }
+        .etiqueta-faccion { background-color: #d4a373; color: #fff; padding: 3px 10px; border-radius: 15px; font-size: 0.8rem; }
+        .contenido-tarjeta { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .lema { font-style: italic; color: #666; margin-bottom: 15px; text-align: center; font-size: 0.95rem; padding: 10px; background-color: #f9f9f9; border-radius: 8px; }
+        
+        /* Ocultamos los detalles largos en la tarjeta normal */
+        .hazas-seccion, .bio-extendida { display: none; }
+        .instruccion-clic { text-align: center; color: #a26944; font-weight: bold; font-size: 0.9rem; margin-top: auto; padding-top: 10px;}
+
+        /* --- VENTANA EMERGENTE (MODAL) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); display: none;
+            justify-content: center; align-items: center; z-index: 1000; padding: 20px;
+        }
+        .modal-contenido {
+            background-color: #f4f1ea; width: 100%; max-width: 800px; max-height: 90vh;
+            border-radius: 15px; overflow-y: auto; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+        }
+        .cerrar-btn {
+            position: absolute; top: 15px; right: 20px; font-size: 2rem;
+            color: #fff; background: #5c2c16; border: none; border-radius: 30%;
+            width: 40px; height: 40px; line-height: 35px; text-align: center;
+            cursor: pointer; z-index: 10;
+        }
+        .modal-cabecera { position: relative; height: 1080px; }
+        .modal-img { width: 100%; height: 100%; object-fit: cover; object-position: top; border-bottom: 5px solid #a26944;}
+        .modal-cuerpo { padding: 30px; }
+        .modal-titulo { font-size: 2.2rem; color: #5c2c16; margin-bottom: 10px; }
+        .modal-hazas ul { margin-left: 20px; margin-bottom: 20px; color: #444; }
+        .modal-hazas li { margin-bottom: 10px; }
+        .modal-bio p { margin-bottom: 15px; text-align: justify; color: #333; }
+        .titulo-seccion { color: #a26944; border-bottom: 2px solid #d4a373; padding-bottom: 5px; margin: 20px 0 15px 0; }
+
+        footer { background-color: #2b140a; color: #d4a373; text-align: center; padding: 20px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Almanaque Histórico</h1>
+        <p>Los 21 Rostros de la Revolución Mexicana</p>
+    </header>
+
+    <div class="contenedor-controles">
+        <input type="text" id="buscador" class="caja-busqueda" placeholder="Buscar personaje por nombre...">
+        <div class="botones-filtro">
+            <button class="btn activo" onclick="filtrarFaccion('Todos', this)">Todos</button>
+            <button class="btn" onclick="filtrarFaccion('Magonista', this)">Magonistas</button>
+            <button class="btn" onclick="filtrarFaccion('Maderista', this)">Maderistas</button>
+            <button class="btn" onclick="filtrarFaccion('Villista', this)">Villistas</button>
+            <button class="btn" onclick="filtrarFaccion('Zapatista', this)">Zapatistas</button>
+            <button class="btn" onclick="filtrarFaccion('Constitucionalista', this)">Constitucionalistas</button>
+            <button class="btn" onclick="filtrarFaccion('Independiente', this)">Independientes</button>
+        </div>
+    </div>
+
+    <main class="contenedor-almanaque" id="almanaque">
+        
+        <!-- 1. Ricardo Flores Magón -->
+        <div class="tarjeta-personaje" data-faccion="Magonista" data-nombre="ricardo flores magon" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Magon.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Ricardo Flores Magón</h2>
+                <div class="meta-datos"><span>1873 - 1922</span><span class="etiqueta-faccion">Magonista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"La rebeldía es la vida: la sumisión es la muerte."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Fundó el Partido Liberal Mexicano (PLM) y el periódico "Regeneración".</li>
+                    <li>Precursor intelectual de los derechos laborales en México.</li>
+                    <li>Acuñó el famoso lema "Tierra y Libertad".</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Periodista, político, dramaturgo y anarquista mexicano. Fue uno de los más formidables opositores a la dictadura de Porfirio Díaz. A través de su periódico <i>Regeneración</i>, expuso la explotación de los obreros y campesinos.</p>
+                    <p>Murió en la prisión de Leavenworth, Kansas, Estados Unidos, tras años de persecución política. Sus ideales formaron la base de los artículos 27 y 123 de la Constitución de 1917.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Enrique Flores Magón -->
+        <div class="tarjeta-personaje" data-faccion="Magonista" data-nombre="enrique flores magon" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/EFM.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Enrique Flores Magón</h2>
+                <div class="meta-datos"><span>1877 - 1954</span><span class="etiqueta-faccion">Magonista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Sin emancipación económica, no hay libertad política."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Cofundador del periódico Regeneración junto a su hermano Ricardo.</li>
+                    <li>Lideró movimientos huelguistas previos a 1910.</li>
+                    <li>Mantuvo vivo el anarcosindicalismo en el exilio.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Hermano menor de Ricardo, fue un pilar fundamental en la redacción, impresión y distribución clandestina de propaganda anti-reeleccionista. Sufrió cárcel y persecución tanto en México como en Estados Unidos.</p>
+                    <p>A diferencia de su hermano, Enrique sobrevivió a las prisiones estadounidenses y regresó a México décadas después, documentando la historia del movimiento magonista.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Práxedis G. Guerrero -->
+        <div class="tarjeta-personaje" data-faccion="Magonista" data-nombre="praxedis g guerrero" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/praxedis.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Práxedis G. Guerrero</h2>
+                <div class="meta-datos"><span>1882 - 1910</span><span class="etiqueta-faccion">Magonista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Justicia no es dar una limosna, es restituir un derecho."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Comandante militar de las primeras guerrillas del PLM.</li>
+                    <li>Periodista obrero y poeta revolucionario.</li>
+                    <li>Cayó en combate en el alzamiento de Janos, Chihuahua.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>De familia acomodada, renunció a sus privilegios para trabajar como obrero y minero, viviendo de primera mano la explotación. Se unió a los hermanos Flores Magón y se convirtió en la pluma más poética y radical del movimiento.</p>
+                    <p>Murió en combate en diciembre de 1910, convirtiéndose en el primer gran mártir de la lucha armada tras el inicio oficial de la Revolución.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Francisco I. Madero -->
+        <div class="tarjeta-personaje" data-faccion="Maderista" data-nombre="francisco i madero" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/madero.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Francisco I. Madero</h2>
+                <div class="meta-datos"><span>1873 - 1913</span><span class="etiqueta-faccion">Maderista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Sufragio efectivo, no reelección."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Redactó el Plan de San Luis en 1910.</li>
+                    <li>Derrocó la dictadura de Porfirio Díaz.</li>
+                    <li>Presidente de México de 1911 a 1913.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Empresario y político coahuilense que encendió la chispa de la Revolución. Su libro <i>La Sucesión Presidencial de 1910</i> aglutinó el descontento nacional. Fue encarcelado por Díaz, pero escapó a Estados Unidos desde donde llamó a las armas.</p>
+                    <p>Gobernó intentando mantener libertades democráticas absolutas, lo que permitió que sus enemigos conspiraran libremente. Fue traicionado y asesinado durante la Decena Trágica por Victoriano Huerta.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Carmen Serdán -->
+        <div class="tarjeta-personaje" data-faccion="Maderista" data-nombre="carmen serdan" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Carmen ser.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Carmen Serdán</h2>
+                <div class="meta-datos"><span>1875 - 1948</span><span class="etiqueta-faccion">Maderista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"La libertad vale más que la vida misma."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Heroína del primer tiroteo de la Revolución (Puebla, 1910).</li>
+                    <li>Coordinadora logística del armamento maderista.</li>
+                    <li>Enfermera voluntaria y activista antihuertista.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Bajo el seudónimo de "Marcos Serrato", Carmen organizó redes clandestinas, compró armas y distribuyó manifiestos revolucionarios. El 18 de noviembre de 1910, la policía descubrió el arsenal en su casa familiar.</p>
+                    <p>Carmen subió al balcón con un fusil para disparar y arengar al pueblo. Resultó herida y fue encarcelada. Tras la victoria, continuó trabajando en hospitales militares y apoyando la causa constitucionalista.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Aquiles Serdán -->
+        <div class="tarjeta-personaje" data-faccion="Maderista" data-nombre="aquiles serdan" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Aquiles_Serdan.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Aquiles Serdán</h2>
+                <div class="meta-datos"><span>1876 - 1910</span><span class="etiqueta-faccion">Maderista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"La república será salvada no por los hombres, sino por los principios."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Fundador del club político "Luz y Progreso".</li>
+                    <li>Líder maderista en el Estado de Puebla.</li>
+                    <li>Mártir que detonó prematuramente la Revolución.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Hermano de Carmen, Aquiles fue designado por Madero para liderar el levantamiento en Puebla. Días antes de la fecha acordada (20 de noviembre), la policía asaltó su casa el 18 de noviembre.</p>
+                    <p>Resistió junto a su familia en un heroico combate. Tras horas de asedio, se ocultó en un sótano, pero fue descubierto al día siguiente y asesinado a quemarropa. Su muerte indignó y movilizó a todo el país.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. José María Pino Suárez -->
+        <div class="tarjeta-personaje" data-faccion="Maderista" data-nombre="jose maria pino suarez" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Vicepresidente_José_María_Pino_Suárez_crop.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>José María Pino Suárez</h2>
+                <div class="meta-datos"><span>1869 - 1913</span><span class="etiqueta-faccion">Maderista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Morir por la patria es vivir para siempre en la memoria."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Último Vicepresidente constitucional de México.</li>
+                    <li>Gobernador progresista de Yucatán.</li>
+                    <li>Leal colaborador y mártir junto a Madero.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Político, abogado y poeta nacido en Tabasco. Fue el compañero de fórmula de Madero. Creía firmemente en la institucionalidad y en la transición pacífica hacia la democracia.</p>
+                    <p>A pesar de las advertencias, se negó a abandonar a Madero durante el golpe de Estado de la Decena Trágica. Ambos fueron obligados a renunciar y fusilados por la espalda a las afueras de la penitenciaría de Lecumberri.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. Emiliano Zapata -->
+        <div class="tarjeta-personaje" data-faccion="Zapatista" data-nombre="emiliano zapata" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Zapata.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Emiliano Zapata</h2>
+                <div class="meta-datos"><span>1879 - 1919</span><span class="etiqueta-faccion">Zapatista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Es mejor morir de pie que vivir toda una vida arrodillado."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Líder indiscutible del Ejército Libertador del Sur.</li>
+                    <li>Autor intelectual del Plan de Ayala.</li>
+                    <li>Símbolo mundial de la resistencia campesina.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Nacido en Anenecuilco, Morelos. Desde joven fue elegido por su pueblo para defender las tierras comunales robadas por los hacendados azucareros. Ante la vía legal agotada, tomó las armas.</p>
+                    <p>Su lucha fue inquebrantable; combatió a Díaz, a Madero (por no cumplir el reparto agrario), a Huerta y a Carranza. Murió traicionado en una emboscada en la hacienda de Chinameca, orquestada por el ejército carrancista.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. Eufemio Zapata -->
+        <div class="tarjeta-personaje" data-faccion="Zapatista" data-nombre="eufemio zapata" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/eufemio.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Eufemio Zapata</h2>
+                <div class="meta-datos"><span>1873 - 1917</span><span class="etiqueta-faccion">Zapatista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"A los traidores ni agua."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>General audaz del Ejército Libertador del Sur.</li>
+                    <li>Tomó y controló partes estratégicas de Puebla y Morelos.</li>
+                    <li>Hermano mayor y brazo armado de confianza de Emiliano.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>A diferencia de su hermano Emiliano, Eufemio tenía un carácter volcánico, irreverente y violento. Fue crucial en las primeras victorias militares de las guerrillas surianas debido a su temeridad en el campo de batalla.</p>
+                    <p>Se cuenta que, al entrar a la Ciudad de México, cabalgó hasta el Palacio Nacional para buscar la silla presidencial. Murió trágicamente asesinado por uno de sus propios subordinados tras un pleito personal por indisciplina.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. Otilio Montaño -->
+        <div class="tarjeta-personaje" data-faccion="Zapatista" data-nombre="otilio montaño" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Otilio-Montaño-Sánchez.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Otilio Montaño</h2>
+                <div class="meta-datos"><span>1887 - 1917</span><span class="etiqueta-faccion">Zapatista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"La pluma es tan necesaria como el fusil para hacer la revolución."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Profesor rural y principal ideólogo del zapatismo temprano.</li>
+                    <li>Co-redactor del histórico Plan de Ayala.</li>
+                    <li>Fungió como Secretario de Instrucción Pública zapatista.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Montaño era un maestro de escuela que le dio estructura ideológica y legal a las demandas de los campesinos analfabetas. Junto a Zapata en las montañas de Puebla, transcribió y pulió el Plan de Ayala.</p>
+                    <p>A pesar de sus grandes aportes, años después fue acusado de traición por intentar negociar con facciones enemigas. Fue sometido a un juicio sumario por los propios zapatistas y fusilado en Buenavista de Cuéllar.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. Genovevo de la O -->
+        <div class="tarjeta-personaje" data-faccion="Zapatista" data-nombre="genovevo de la o" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Genovevo_de_la_O.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Genovevo de la O</h2>
+                <div class="meta-datos"><span>1876 - 1952</span><span class="etiqueta-faccion">Zapatista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"En las montañas, nosotros dictamos la ley."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Mantuvo el control zapatista en el cerro del Ajusco.</li>
+                    <li>Asedió continuamente la Ciudad de México.</li>
+                    <li>Uno de los pocos jefes zapatistas que sobrevivió a la guerra.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Originario de Santa María Ahuacatitlán, De la O fue un maestro de la guerra de guerrillas. Desde la sierra del Ajusco, cortaba las líneas de tren y suministro hacia la capital, volviendo loco al ejército federal.</p>
+                    <p>A la muerte de Zapata en 1919, Genovevo se convirtió en uno de los líderes más influyentes, logrando pactar con Obregón en 1920 para derrocar a Carranza. Murió de viejo, respetado como general del Ejército Mexicano.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. Pancho Villa -->
+        <div class="tarjeta-personaje" data-faccion="Villista" data-nombre="pancho villa doroteo arango" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Pancho_Villa_bandolier_(cropped).jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Pancho Villa</h2>
+                <div class="meta-datos"><span>1878 - 1923</span><span class="etiqueta-faccion">Villista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"El país debe ser gobernado por alguien que realmente quiera a su gente."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Comandó la legendaria División del Norte.</li>
+                    <li>Realizó la Toma de Zacatecas (1914).</li>
+                    <li>Único latinoamericano en invadir territorio de EE. UU. (Columbus).</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Nacido como Doroteo Arango, fue bandolero antes que revolucionario. Se convirtió en el genio militar del norte, armando un ejército de caballería imparable equipado con trenes hospital y artillería pesada.</p>
+                    <p>Gobernó Chihuahua fugazmente abriendo docenas de escuelas. Tras ser derrotado por Obregón, volvió a la guerrilla. Se retiró a la hacienda de Canutillo tras una amnistía, pero fue asesinado en una emboscada en Parral en 1923 por miedo a que se postulara a la presidencia.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. Felipe Ángeles -->
+        <div class="tarjeta-personaje" data-faccion="Villista" data-nombre="felipe angeles" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Felipe_Angeles.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Felipe Ángeles</h2>
+                <div class="meta-datos"><span>1868 - 1919</span><span class="etiqueta-faccion">Villista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Mi mayor aspiración ha sido que se me considere un hombre de honor."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Estratega maestro y artillero de la División del Norte.</li>
+                    <li>Garantizó la victoria villista en Torreón y Zacatecas.</li>
+                    <li>Luchó por humanizar el conflicto armado perdonando prisioneros.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Militar de carrera educado en Francia y antiguo director del Colegio Militar. Se unió a la revolución por lealtad a Madero. Carranza lo marginó por envidia de su talento, llevándolo a aliarse con Pancho Villa.</p>
+                    <p>Ángeles aportó la táctica científica al arrojo de los villistas. Era conocido por su moralidad, rehusándose a fusilar prisioneros. Fue capturado por los carrancistas y fusilado tras un consejo de guerra que lo sentenció de antemano.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 14. Rodolfo Fierro -->
+        <div class="tarjeta-personaje" data-faccion="Villista" data-nombre="rodolfo fierro" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/rodolfo fierro.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Rodolfo Fierro</h2>
+                <div class="meta-datos"><span>1880 - 1915</span><span class="etiqueta-faccion">Villista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Cuando yo disparo, los muertos no se levantan."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>General de confianza y ejecutor de Pancho Villa.</li>
+                    <li>Conocido por su implacable crueldad en batalla (El Carnicero).</li>
+                    <li>Pieza clave de choque en las cargas de caballería del norte.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Antiguo ferrocarrilero, Fierro poseía un valor temerario y una lealtad ciega hacia Villa, encargándose de ejecutar las misiones más sanguinarias, incluyendo ejecuciones masivas de prisioneros (como en Tres Castillos).</p>
+                    <p>Su fama de invencible terminó de forma absurda: montado en su caballo y cargado de oro confiscado, intentó cruzar la laguna de Casas Grandes. El peso lo hundió en el fango y murió ahogado sin que nadie pudiera rescatarlo.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 15. Maclovio Herrera -->
+        <div class="tarjeta-personaje" data-faccion="Villista" data-nombre="maclovio herrera" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Maclovio_Herrera.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Maclovio Herrera</h2>
+                <div class="meta-datos"><span>1879 - 1915</span><span class="etiqueta-faccion">Villista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Fiel a mis convicciones, caiga quien caiga."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Miembro fundador de la División del Norte.</li>
+                    <li>Heroico defensor de Parral ante el ejército federal.</li>
+                    <li>Terminó rompiendo con Villa para unirse a Carranza.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Minero valiente que formó su propia guerrilla en Chihuahua. Fue uno de los generales originales que votó por nombrar a Pancho Villa comandante de la División del Norte. Su brigada, los "Libres del Norte", era famosamente aguerrida.</p>
+                    <p>En la escisión revolucionaria de 1914, Herrera tomó la difícil decisión de no seguir a Villa y mantenerse leal al gobierno Constitucionalista, lo que provocó una cacería en su contra. Murió accidentalmente por fuego amigo en Nuevo Laredo.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 16. Venustiano Carranza -->
+        <div class="tarjeta-personaje" data-faccion="Constitucionalista" data-nombre="venustiano carranza" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Venustiano_Carranza.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Venustiano Carranza</h2>
+                <div class="meta-datos"><span>1859 - 1920</span><span class="etiqueta-faccion">Constitucionalista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Para restablecer el orden legal, necesitamos leyes justas."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Primer Jefe del Ejército Constitucionalista (Plan de Guadalupe).</li>
+                    <li>Convocó y promulgó la Constitución Política de 1917.</li>
+                    <li>Defendió la soberanía nacional ante injerencias extranjeras.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Político de la vieja escuela, de barba blanca y lentes oscuros. Como gobernador de Coahuila, fue el único en desconocer la usurpación de Huerta. Carecía de genio militar, pero era un político calculador e institucional.</p>
+                    <p>Su mayor logro fue la Constitución de 1917, la más avanzada de su época en derechos sociales. Sin embargo, su negativa a dejar el poder y entregar la presidencia a Obregón desencadenó el Plan de Agua Prieta, llevándolo a ser asesinado en Tlaxcalantongo mientras huía.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 17. Álvaro Obregón -->
+        <div class="tarjeta-personaje" data-faccion="Constitucionalista" data-nombre="alvaro obregon" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Álvaro Obregón.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Álvaro Obregón</h2>
+                <div class="meta-datos"><span>1880 - 1928</span><span class="etiqueta-faccion">Constitucionalista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Nadie resiste un cañonazo de cincuenta mil pesos."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>El general más brillante; nunca perdió una batalla.</li>
+                    <li>Destrozó a la División del Norte en Celaya (perdiendo su brazo derecho).</li>
+                    <li>Presidente que pacificó el país e impulsó la SEP.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Agricultor sonorense con una memoria fotográfica y un genio táctico moderno (usó trincheras y alambre de púas antes de la 1ra Guerra Mundial). Derrotó militarmente al maderismo, villismo y carrancismo.</p>
+                    <p>Como presidente, inició la reconstrucción nacional y repartió tierras, combinando la represión de opositores con alianzas sindicales. Fue asesinado por un fanático religioso en el restaurante "La Bombilla" tras haberse reelegido como presidente.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 18. Plutarco Elías Calles -->
+        <div class="tarjeta-personaje" data-faccion="Constitucionalista" data-nombre="plutarco elias calles" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/pultarco elias calles.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Plutarco Elías Calles</h2>
+                <div class="meta-datos"><span>1877 - 1945</span><span class="etiqueta-faccion">Constitucionalista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"México debe pasar de ser un país de caudillos a uno de instituciones."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Fundador del Banco de México y el Banco de Crédito Agrícola.</li>
+                    <li>Creó el Partido Nacional Revolucionario (hoy PRI) en 1929.</li>
+                    <li>Conocido como el "Jefe Máximo de la Revolución".</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Maestro de escuela sonorense convertido en general. Como presidente, modernizó la infraestructura de México mediante la construcción de carreteras, presas y un sistema financiero sólido.</p>
+                    <p>Su radicalismo anticlerical detonó la sangrienta Guerra Cristera. Tras el asesinato de Obregón, controló el poder político desde las sombras (el Maximato) hasta que el presidente Lázaro Cárdenas lo exilió del país en 1936.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 19. Pablo González -->
+        <div class="tarjeta-personaje" data-faccion="Constitucionalista" data-nombre="pablo gonzalez" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/Pablo gonzalez.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Pablo González</h2>
+                <div class="meta-datos"><span>1879 - 1950</span><span class="etiqueta-faccion">Constitucionalista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"El orden debe restaurarse, cueste lo que cueste."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Comandante del Cuerpo de Ejército del Noreste.</li>
+                    <li>Planificó y ejecutó el asesinato de Emiliano Zapata.</li>
+                    <li>General que más batallas perdió, pero que más territorio ocupó.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Obregón se burlaba de él diciendo que era el único general "que nunca ganó una batalla", pero Pablo González era un excelente organizador y logístico en el cual Carranza confiaba ciegamente.</p>
+                    <p>Es recordado tristemente por la pacificación a sangre y fuego del estado de Morelos y por usar al coronel Guajardo para traicionar y acribillar a Zapata. Terminó exiliado y marginado tras el triunfo del grupo sonorense.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 20. Salvador Alvarado -->
+        <div class="tarjeta-personaje" data-faccion="Constitucionalista" data-nombre="salvador alvarado" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/salvador alvarado.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Salvador Alvarado</h2>
+                <div class="meta-datos"><span>1880 - 1924</span><span class="etiqueta-faccion">Constitucionalista</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"La revolución no es destruir, es edificar sobre bases de justicia."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Llevó el triunfo de la Revolución a la península de Yucatán.</li>
+                    <li>Promulgó leyes laborales avanzadas y liberó a los indígenas mayas.</li>
+                    <li>Promotor incansable de los derechos de las mujeres.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>General sinaloense encomendado por Carranza para sofocar la rebelión separatista en Yucatán. Al llegar, se convirtió en un gobernador reformista extraordinario. Abolió la esclavitud disfrazada de las haciendas henequeneras.</p>
+                    <p>Auspició el Primer Congreso Feminista de México (1916) y construyó cientos de escuelas laicas. Lamentablemente, tomó decisiones políticas erráticas al final de su vida y fue emboscado y asesinado en Tabasco.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 21. Belisario Domínguez -->
+        <div class="tarjeta-personaje" data-faccion="Independiente" data-nombre="belisario dominguez" onclick="abrirModal(this)">
+            <div class="contenedor-imagen"><img class="imagen-personaje" src="img/belisario dominguez.jpg" onerror="this.src='https://placehold.co/400x300/e0d5c1/5c2c16?text=Foto'"></div>
+            <div class="info-basica">
+                <h2>Belisario Domínguez</h2>
+                <div class="meta-datos"><span>1863 - 1913</span><span class="etiqueta-faccion">Independiente</span></div>
+            </div>
+            <div class="contenido-tarjeta">
+                <p class="lema">"Si cada uno de los mexicanos hiciera lo que le corresponde, la patria estaría salvada."</p>
+                <p class="instruccion-clic">Haz clic para ver biografía completa ➔</p>
+                <div class="hazas-seccion">
+                    <li>Médico humanista de Chiapas.</li>
+                    <li>Senador de la República que enfrentó abiertamente a la dictadura.</li>
+                    <li>Mártir de la libertad de expresión en México.</li>
+                </div>
+                <div class="bio-extendida">
+                    <p>Médico cirujano que dedicó gran parte de su vida a atender a los pobres en Comitán, Chiapas. Tras el asesinato de Madero, ocupó un escaño en el Senado y se negó a callar ante el terror impuesto por el usurpador Victoriano Huerta.</p>
+                    <p>Pronunció un discurso histórico exigiendo la renuncia de Huerta. Días después fue sacado de su hotel por matones gubernamentales y asesinado, presuntamente cortándole la lengua. Su muerte provocó la disolución del Congreso y volcó el apoyo a la Revolución.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- EL MODAL (Ventana Emergente Oculta) -->
+    <div id="modal-personaje" class="modal-overlay" onclick="cerrarModalFondo(event)">
+        <div class="modal-contenido">
+            <button class="cerrar-btn" onclick="cerrarModal()">×</button>
+            
+            <div class="modal-cabecera">
+                <img id="modal-img" class="modal-img" src="" alt="Foto Personaje">
+            </div>
+            
+            <div class="modal-cuerpo">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span id="modal-fechas" style="color: #777; font-weight: bold;"></span>
+                    <span id="modal-faccion" class="etiqueta-faccion" style="font-size: 1rem;"></span>
+                </div>
+                
+                <h2 id="modal-titulo" class="modal-titulo"></h2>
+                <p id="modal-lema" style="font-style: italic; color: #666; font-size: 1.1rem; text-align: center; margin-bottom: 20px;"></p>
+                
+                <h3 class="titulo-seccion">Hazañas Principales</h3>
+                <div id="modal-hazas" class="modal-hazas"></div>
+                
+                <h3 class="titulo-seccion">Biografía Extendida</h3>
+                <div id="modal-bio" class="modal-bio"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 Almanaque Histórico Digital - Memoria de la Revolución Mexicana</p>
+    </footer>
+
+    <!-- LOGICA DE LA PÁGINA (JavaScript) -->
+    <script>
+        // Lógica del Buscador y Filtros
+        const buscador = document.getElementById('buscador');
+        const tarjetas = document.querySelectorAll('.tarjeta-personaje');
+        let faccionActual = 'Todos';
+
+        buscador.addEventListener('input', (e) => {
+            const texto = e.target.value.toLowerCase().trim();
+            filtrarElementos(texto, faccionActual);
+        });
+
+        function filtrarFaccion(faccion, botonSeleccionado) {
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('activo'));
+            botonSeleccionado.classList.add('activo');
+            faccionActual = faccion;
+            const texto = buscador.value.toLowerCase().trim();
+            filtrarElementos(texto, faccionActual);
+        }
+
+        function filtrarElementos(texto, faccion) {
+            tarjetas.forEach(tarjeta => {
+                const coincideNombre = tarjeta.getAttribute('data-nombre').includes(texto);
+                const coincideFaccion = (faccion === 'Todos' || tarjeta.getAttribute('data-faccion') === faccion);
+                tarjeta.style.display = (coincideNombre && coincideFaccion) ? 'flex' : 'none';
+            });
+        }
+
+        // Lógica de la Ventana Emergente (Modal)
+        const modal = document.getElementById('modal-personaje');
+
+        function abrirModal(elementoTarjeta) {
+            // Extraer datos de la tarjeta en la que se hizo clic
+            const imgSrc = elementoTarjeta.querySelector('.imagen-personaje').src;
+            const nombre = elementoTarjeta.querySelector('h2').innerText;
+            const fechas = elementoTarjeta.querySelector('.meta-datos span:first-child').innerText;
+            const faccion = elementoTarjeta.querySelector('.etiqueta-faccion').innerText;
+            const lema = elementoTarjeta.querySelector('.lema').innerText;
+            const hazasHtml = elementoTarjeta.querySelector('.hazas-seccion').innerHTML;
+            const bioHtml = elementoTarjeta.querySelector('.bio-extendida').innerHTML;
+
+            // Inyectar datos en la ventana modal
+            document.getElementById('modal-img').src = imgSrc;
+            document.getElementById('modal-titulo').innerText = nombre;
+            document.getElementById('modal-fechas').innerText = fechas;
+            document.getElementById('modal-faccion').innerText = faccion;
+            document.getElementById('modal-lema').innerText = lema;
+            document.getElementById('modal-hazas').innerHTML = `<ul>${hazasHtml}</ul>`;
+            document.getElementById('modal-bio').innerHTML = bioHtml;
+
+            // Mostrar modal (bloquea el scroll de la página de fondo)
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function cerrarModal() {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restaura el scroll
+        }
+
+        // Permite cerrar la ventana al hacer clic en el fondo oscuro
+        function cerrarModalFondo(evento) {
+            if (evento.target === modal) {
+                cerrarModal();
+            }
+        }
+    </script>
+</body>
+</html>
